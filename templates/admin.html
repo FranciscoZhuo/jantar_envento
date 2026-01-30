@@ -17,17 +17,7 @@
         <div class="message {{ msg_class }}">{{ message }}</div>
         {% endif %}
 
-        <!-- Add new user -->
-        <div class="add-form">
-            <h2>Add User</h2>
-            <form method="POST" class="inline-form">
-                <input type="hidden" name="action" value="add">
-                <input type="text" name="new_name" placeholder="Name" required>
-                <input type="text" name="new_burger" placeholder="Burger" required>
-                <button class="btn-small" type="submit">Add</button>
-            </form>
-        </div>
-
+        <!-- Stats (overview first) -->
         <div class="stats">
             <div class="stat-box">
                 <div class="stat-num">{{ total }}</div>
@@ -41,6 +31,17 @@
                 <div class="stat-num">{{ remaining }}</div>
                 <div class="stat-label">Remaining</div>
             </div>
+        </div>
+
+        <!-- Add new user -->
+        <div class="add-form">
+            <h2>Add User</h2>
+            <form method="POST" class="inline-form">
+                <input type="hidden" name="action" value="add">
+                <input type="text" name="new_name" placeholder="Name" required>
+                <input type="text" name="new_burger" placeholder="Burger" required>
+                <button class="btn-small" type="submit">Add</button>
+            </form>
         </div>
 
         <div class="table-wrap">
@@ -79,34 +80,34 @@
                         {% endif %}
                     </td>
                     <td class="action-cell">
-                        <!-- Save edit -->
-                        <button type="submit" form="edit-{{ row.id }}" class="btn-small btn-save">Save</button>
-
-                        <!-- QR Code -->
-                        <button type="button" class="btn-small btn-qr"
-                            onclick="showQR('{{ row.id }}', '{{ row.name }}', '{{ row.burger }}')">QR</button>
-
-                        <!-- Mark / Reset -->
+                        <!-- Mark / Reset — primary action -->
                         {% if row.received %}
-                        <form method="POST" style="display:inline">
+                        <form method="POST" class="inline-action">
                             <input type="hidden" name="action" value="reset">
                             <input type="hidden" name="user_id" value="{{ row.id }}">
                             <button class="btn-small btn-danger" type="submit">Reset</button>
                         </form>
                         {% else %}
-                        <form method="POST" style="display:inline">
+                        <form method="POST" class="inline-action">
                             <input type="hidden" name="action" value="mark">
                             <input type="hidden" name="user_id" value="{{ row.id }}">
-                            <button class="btn-small" type="submit">Mark</button>
+                            <button class="btn-small btn-mark" type="submit">Mark</button>
                         </form>
                         {% endif %}
 
-                        <!-- Delete -->
-                        <form method="POST" style="display:inline">
+                        <!-- QR Code -->
+                        <button type="button" class="btn-small btn-qr"
+                            onclick="showQR('{{ row.id }}', '{{ row.name }}', '{{ row.burger }}')">QR</button>
+
+                        <!-- Save edit — tertiary/ghost -->
+                        <button type="submit" form="edit-{{ row.id }}" class="btn-small btn-save-ghost">Save</button>
+
+                        <!-- Delete — icon button -->
+                        <form method="POST" class="inline-action">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="user_id" value="{{ row.id }}">
-                            <button class="btn-small btn-danger" type="submit"
-                                onclick="return confirm('Delete this user?')">Del</button>
+                            <button class="btn-small btn-delete-icon" type="submit"
+                                onclick="return confirm('Delete this user?')" title="Delete">&times;</button>
                         </form>
                     </td>
                 </tr>
@@ -117,7 +118,7 @@
 
         <div class="actions-bar">
             <a class="btn btn-small" href="/">Back to check-in</a>
-            <form method="POST" style="display:inline">
+            <form method="POST" class="inline-action">
                 <input type="hidden" name="action" value="reset_all">
                 <button class="btn-small btn-danger" type="submit"
                     onclick="return confirm('Reset ALL entries to Waiting?')">Reset all</button>
@@ -131,12 +132,18 @@
             <h2 id="qr-modal-title"></h2>
             <p id="qr-modal-burger" class="qr-modal-burger"></p>
             <div id="qr-code-container"></div>
-            <button class="btn btn-small" onclick="closeQR()" style="margin-top:16px">Close</button>
+            <div class="qr-modal-actions">
+                <button class="btn btn-small btn-download" onclick="downloadQR()">Download PNG</button>
+                <button class="btn btn-small" onclick="closeQR()">Close</button>
+            </div>
         </div>
     </div>
 
     <script>
+        let currentUserName = '';
+
         function showQR(userId, userName, userBurger) {
+            currentUserName = userName;
             const modal = document.getElementById('qr-modal');
             const container = document.getElementById('qr-code-container');
             document.getElementById('qr-modal-title').textContent = userName;
@@ -157,6 +164,25 @@
         function closeQR(event) {
             if (event && event.target !== document.getElementById('qr-modal')) return;
             document.getElementById('qr-modal').classList.remove('active');
+        }
+
+        function downloadQR() {
+            const src = document.querySelector('#qr-code-container canvas');
+            if (!src) return;
+            const border = 32;
+            const out = document.createElement('canvas');
+            out.width = src.width + border * 2;
+            out.height = src.height + border * 2;
+            const ctx = out.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, out.width, out.height);
+            ctx.drawImage(src, border, border);
+            const a = document.createElement('a');
+            a.href = out.toDataURL('image/png');
+            a.download = 'qr-' + currentUserName.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     </script>
 </body>
