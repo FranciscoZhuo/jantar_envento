@@ -281,12 +281,14 @@ tr:hover td { background: rgba(255,255,255,0.04); }
     margin-bottom: 20px;
 }
 #qr-code-container {
-    display: flex;
-    justify-content: center;
+    display: inline-block;
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 8px;
 }
 #qr-code-container canvas,
 #qr-code-container img {
-    border-radius: 8px;
+    border-radius: 0;
 }
 .btn-qr {
     background: linear-gradient(135deg, #6a1b9a, #8e24aa);
