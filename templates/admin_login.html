@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="card">
+        <div class="icon">&#128274;</div>
+        <h1>Admin Login</h1>
+        <p class="subtitle">Enter the admin password</p>
+        <form method="POST">
+            <input type="password" name="password" placeholder="Password" required autocomplete="off">
+            <button type="submit">Login</button>
+        </form>
+        {% if error %}
+        <div class="message error">Wrong password.</div>
+        {% endif %}
+        <a class="admin-link" href="/">Back to check-in</a>
+    </div>
+</body>
+</html>

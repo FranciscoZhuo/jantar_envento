@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burger Check-in</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">&#127754;</div>
+        <h1>Burger Check-in</h1>
+        <p class="subtitle">Scan your QR code to pick up your burger</p>
+
+        <div id="qr-reader" class="qr-scanner-container"></div>
+
+        <button id="scan-btn" class="btn" onclick="toggleScan()">Start Scanner</button>
+
+        <div id="result"></div>
+
+        <a class="admin-link" href="/admin">Admin</a>
+    </div>
+
+    <script>
+        let html5QrCode = null;
+        let scanning = false;
+
+        function toggleScan() {
+            if (scanning) {
+                stopScan();
+            } else {
+                startScan();
+            }
+        }
+
+        function startScan() {
+            const btn = document.getElementById('scan-btn');
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+
+            html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess,
+                () => {}
+            ).then(() => {
+                scanning = true;
+                btn.textContent = 'Stop Scanner';
+                btn.classList.add('btn-danger');
+            }).catch(err => {
+                resultDiv.innerHTML = '<div class="message error">Could not start camera: ' + err + '</div>';
+            });
+        }
+
+        function stopScan() {
+            const btn = document.getElementById('scan-btn');
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    scanning = false;
+                    btn.textContent = 'Start Scanner';
+                    btn.classList.remove('btn-danger');
+                });
+            }
+        }
+
+        function onScanSuccess(decodedText) {
+            stopScan();
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="message">Processing...</div>';
+
+            fetch('/api/pickup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: decodedText })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    resultDiv.innerHTML =
+                        '<div class="message success">' +
+                        data.name + ', your burger is: <span class="burger-name">' + data.burger + '</span><br>' +
+                        'Enjoy your meal!' +
+                        '</div>';
+                } else if (data.status === 'already') {
+                    resultDiv.innerHTML =
+                        '<div class="message error">' +
+                        data.name + ', you already picked up your burger (<span class="burger-name">' + data.burger + '</span>).' +
+                        '</div>';
+                } else {
+                    resultDiv.innerHTML =
+                        '<div class="message error">QR code not recognized. Please try again.</div>';
+                }
+            })
+            .catch(() => {
+                resultDiv.innerHTML =
+                    '<div class="message error">Network error. Please try again.</div>';
+            });
+        }
+    </script>
+</body>
+</html>

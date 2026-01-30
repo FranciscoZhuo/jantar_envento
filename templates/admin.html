@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="card card-wide">
+        <div class="icon">&#128203;</div>
+        <h1>Admin Dashboard</h1>
+        <p class="subtitle">Manage burger pickups</p>
+
+        {% if message %}
+        <div class="message {{ msg_class }}">{{ message }}</div>
+        {% endif %}
+
+        <!-- Add new user -->
+        <div class="add-form">
+            <h2>Add User</h2>
+            <form method="POST" class="inline-form">
+                <input type="hidden" name="action" value="add">
+                <input type="text" name="new_name" placeholder="Name" required>
+                <input type="text" name="new_burger" placeholder="Burger" required>
+                <button class="btn-small" type="submit">Add</button>
+            </form>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-num">{{ total }}</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-num">{{ picked }}</div>
+                <div class="stat-label">Picked up</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-num">{{ remaining }}</div>
+                <div class="stat-label">Remaining</div>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Burger</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                <tr id="row-{{ row.id }}">
+                    <td>{{ loop.index }}</td>
+
+                    <!-- Inline edit form -->
+                    <td>
+                        <form method="POST" class="edit-form" id="edit-{{ row.id }}">
+                            <input type="hidden" name="action" value="edit">
+                            <input type="hidden" name="user_id" value="{{ row.id }}">
+                            <input type="text" name="edit_name" value="{{ row.name }}" class="inline-input">
+                    </td>
+                    <td>
+                            <input type="text" name="edit_burger" value="{{ row.burger }}" class="inline-input">
+                        </form>
+                    </td>
+
+                    <td>
+                        {% if row.received %}
+                            <span class="status-yes">Picked up</span>
+                        {% else %}
+                            <span class="status-no">Waiting</span>
+                        {% endif %}
+                    </td>
+                    <td class="action-cell">
+                        <!-- Save edit -->
+                        <button type="submit" form="edit-{{ row.id }}" class="btn-small btn-save">Save</button>
+
+                        <!-- QR Code -->
+                        <button type="button" class="btn-small btn-qr"
+                            onclick="showQR('{{ row.id }}', '{{ row.name }}', '{{ row.burger }}')">QR</button>
+
+                        <!-- Mark / Reset -->
+                        {% if row.received %}
+                        <form method="POST" style="display:inline">
+                            <input type="hidden" name="action" value="reset">
+                            <input type="hidden" name="user_id" value="{{ row.id }}">
+                            <button class="btn-small btn-danger" type="submit">Reset</button>
+                        </form>
+                        {% else %}
+                        <form method="POST" style="display:inline">
+                            <input type="hidden" name="action" value="mark">
+                            <input type="hidden" name="user_id" value="{{ row.id }}">
+                            <button class="btn-small" type="submit">Mark</button>
+                        </form>
+                        {% endif %}
+
+                        <!-- Delete -->
+                        <form method="POST" style="display:inline">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="user_id" value="{{ row.id }}">
+                            <button class="btn-small btn-danger" type="submit"
+                                onclick="return confirm('Delete this user?')">Del</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+
+        <div class="actions-bar">
+            <a class="btn btn-small" href="/">Back to check-in</a>
+            <form method="POST" style="display:inline">
+                <input type="hidden" name="action" value="reset_all">
+                <button class="btn-small btn-danger" type="submit"
+                    onclick="return confirm('Reset ALL entries to Waiting?')">Reset all</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qr-modal" class="qr-modal-overlay" onclick="closeQR(event)">
+        <div class="qr-modal">
+            <h2 id="qr-modal-title"></h2>
+            <p id="qr-modal-burger" class="qr-modal-burger"></p>
+            <div id="qr-code-container"></div>
+            <button class="btn btn-small" onclick="closeQR()" style="margin-top:16px">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function showQR(userId, userName, userBurger) {
+            const modal = document.getElementById('qr-modal');
+            const container = document.getElementById('qr-code-container');
+            document.getElementById('qr-modal-title').textContent = userName;
+            document.getElementById('qr-modal-burger').textContent = userBurger;
+
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: String(userId),
+                width: 200,
+                height: 200,
+                colorDark: '#0f2027',
+                colorLight: '#e0f7fa'
+            });
+
+            modal.classList.add('active');
+        }
+
+        function closeQR(event) {
+            if (event && event.target !== document.getElementById('qr-modal')) return;
+            document.getElementById('qr-modal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
