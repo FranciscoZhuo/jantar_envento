@@ -9,13 +9,13 @@
 </head>
 <body>
     <div class="card">
-        <div class="icon">&#127754;</div>
-        <h1>Burger Check-in</h1>
-        <p class="subtitle">Scan your QR code to pick up your burger</p>
+        <div class="icon"><img src="{{ url_for('static', filename='img/Logo_Branco.png') }}" alt="Logo" style="max-width: 120px; height: auto;"></div>
+        <h1>Jantar Hamburguer</h1>
+        <p class="subtitle">Escaneie o código QR para confirmar o levantamento</p>
 
         <div id="qr-reader" class="qr-scanner-container"></div>
 
-        <button id="scan-btn" class="btn" onclick="toggleScan()">Start Scanner</button>
+        <button id="scan-btn" class="btn" onclick="toggleScan()">Scanner</button>
 
         <div id="result"></div>
 
@@ -50,7 +50,7 @@
                 btn.textContent = 'Stop Scanner';
                 btn.classList.add('btn-danger');
             }).catch(err => {
-                resultDiv.innerHTML = '<div class="message error">Could not start camera: ' + err + '</div>';
+                resultDiv.innerHTML = '<div class="message error">Erro ao iniciar a câmera: ' + err + '</div>';
             });
         }
 
@@ -60,7 +60,7 @@
                 html5QrCode.stop().then(() => {
                     html5QrCode.clear();
                     scanning = false;
-                    btn.textContent = 'Start Scanner';
+                    btn.textContent = 'Scanner';
                     btn.classList.remove('btn-danger');
                 });
             }
@@ -70,7 +70,7 @@
             stopScan();
 
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '<div class="message">Processing...</div>';
+            resultDiv.innerHTML = '<div class="message">A Processar...</div>';
 
             fetch('/api/pickup', {
                 method: 'POST',
@@ -82,24 +82,29 @@
                 if (data.status === 'success') {
                     resultDiv.innerHTML =
                         '<div class="message success">' +
-                        data.name + ', your burger is: <span class="burger-name">' + data.burger + '</span><br>' +
-                        'Enjoy your meal!' +
+                        data.name + ', O hambúrguer  desta pessoa é: <span class="burger-name">' + data.burger + '</span><br>' +
+                        'Aproveite a refeição!' +
                         '</div>';
                 } else if (data.status === 'already') {
                     resultDiv.innerHTML =
                         '<div class="message error">' +
-                        data.name + ', you already picked up your burger (<span class="burger-name">' + data.burger + '</span>).' +
+                        data.name + ', Esta pessoa já levantou o seu hambúrguer (<span class="burger-name">' + data.burger + '</span>).' +
                         '</div>';
                 } else {
                     resultDiv.innerHTML =
-                        '<div class="message error">QR code not recognized. Please try again.</div>';
+                        '<div class="message error">QR code não reconhecido. Por favor, tente novamente.</div>';
                 }
             })
             .catch(() => {
                 resultDiv.innerHTML =
-                    '<div class="message error">Network error. Please try again.</div>';
+                    '<div class="message error">Erro de rede. Por favor, tente novamente.</div>';
             });
         }
     </script>
+
+    <div class="site-footer">
+        Junior Data Consulting<br>
+        &copy;2026 All rights reserved
+    </div>
 </body>
 </html>

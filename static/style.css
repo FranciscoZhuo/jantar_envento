@@ -3,7 +3,9 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     min-height: 100vh;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    background: url('img/Fundo - Candidatura JENC.png') no-repeat center center fixed;
+    background-size: cover;
+    background-color: #0f2027;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -376,6 +378,17 @@ tr:hover td { background: rgba(255,255,255,0.04); }
 }
 .btn-download:hover {
     box-shadow: 0 4px 14px rgba(0, 150, 136, 0.5);
+}
+
+/* ---------- footer ---------- */
+.site-footer {
+    position: fixed;
+    bottom: 12px;
+    left: 16px;
+    z-index: 10;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.7rem;
+    line-height: 1.4;
 }
 
 /* ---------- responsive: tablet ---------- */
