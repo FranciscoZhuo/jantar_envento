@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,123 +7,188 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
 </head>
-<body>
-    <div class="card card-wide">
-        <div class="icon">&#128203;</div>
-        <h1>Admin Dashboard</h1>
-        <p class="subtitle">Manage burger pickups</p>
-
-        {% if message %}
-        <div class="message {{ msg_class }}">{{ message }}</div>
-        {% endif %}
-
-        <!-- Stats (overview first) -->
-        <div class="stats">
-            <div class="stat-box">
-                <div class="stat-num">{{ total }}</div>
-                <div class="stat-label">Total</div>
+<body class="dashboard-body">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="sidebar-logo">
+                    <img src="{{ url_for('static', filename='img/Logo_Branco.png') }}" alt="Logo">
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-link active" data-section="section-overview">Overview</a>
+                    <a href="#" class="nav-link" data-section="section-guests">Convidados</a>
+                    <a href="#" class="nav-link" data-section="section-add">Adicionar</a>
+                </nav>
             </div>
-            <div class="stat-box">
-                <div class="stat-num">{{ picked }}</div>
-                <div class="stat-label">Picked up</div>
+            <div class="sidebar-footer">
+                <a class="sidebar-btn" href="/">&#8592; Back to check-in</a>
+                <form method="POST" class="inline-action">
+                    <input type="hidden" name="action" value="reset_all">
+                    <button class="sidebar-btn sidebar-btn-danger" type="submit"
+                        onclick="return confirm('Reset ALL entries to Waiting?')">Reset all</button>
+                </form>
+                <div class="sidebar-copyright">
+                    Junior Data Consulting<br>&copy;2026 all rights reserved
+                </div>
             </div>
-            <div class="stat-box">
-                <div class="stat-num">{{ remaining }}</div>
-                <div class="stat-label">Remaining</div>
+        </aside>
+
+        <!-- Mobile top bar -->
+        <header class="mobile-topbar">
+            <img src="{{ url_for('static', filename='img/Logo_Branco.png') }}" alt="Logo" class="mobile-logo">
+            <nav class="mobile-nav">
+                <a href="#" class="nav-link active" data-section="section-overview">Overview</a>
+                <a href="#" class="nav-link" data-section="section-guests">Convidados</a>
+                <a href="#" class="nav-link" data-section="section-add">Adicionar</a>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Overview Section -->
+            <div id="section-overview" class="section active">
+                <h1>Overview</h1>
+                <p class="section-subtitle">Resumo do evento</p>
+
+                {% if message %}
+                <div class="message {{ msg_class }}">{{ message }}</div>
+                {% endif %}
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-num">{{ total }}</div>
+                        <div class="kpi-label">Total</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-num">{{ picked }}</div>
+                        <div class="kpi-label">Levantados</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-num">{{ remaining }}</div>
+                        <div class="kpi-label">Restantes</div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Add new user -->
-        <div class="add-form">
-            <h2>Add User</h2>
-            <form method="POST" class="inline-form">
-                <input type="hidden" name="action" value="add">
-                <input type="text" name="new_name" placeholder="Name" required>
-                <input type="text" name="new_burger" placeholder="Burger" required>
-                <button class="btn-small" type="submit">Add</button>
-            </form>
-        </div>
+            <!-- Guests Section -->
+            <div id="section-guests" class="section">
+                <h1>Convidados</h1>
+                <p class="section-subtitle">Gerir convidados e pedidos</p>
 
-        <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Burger</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for row in rows %}
-                <tr id="row-{{ row.id }}">
-                    <td>{{ loop.index }}</td>
+                {% if message %}
+                <div class="message {{ msg_class }}">{{ message }}</div>
+                {% endif %}
 
-                    <!-- Inline edit form -->
-                    <td>
-                        <form method="POST" class="edit-form" id="edit-{{ row.id }}">
-                            <input type="hidden" name="action" value="edit">
-                            <input type="hidden" name="user_id" value="{{ row.id }}">
-                            <input type="text" name="edit_name" value="{{ row.name }}" class="inline-input">
-                    </td>
-                    <td>
-                            <input type="text" name="edit_burger" value="{{ row.burger }}" class="inline-input">
-                        </form>
-                    </td>
+                <!-- Search bar -->
+                <input type="text" id="guest-search" class="search-bar" placeholder="Procurar convidado...">
 
-                    <td>
-                        {% if row.received %}
-                            <span class="status-yes">Picked up</span>
-                        {% else %}
-                            <span class="status-no">Waiting</span>
-                        {% endif %}
-                    </td>
-                    <td class="action-cell">
-                        <!-- Mark / Reset — primary action -->
-                        {% if row.received %}
-                        <form method="POST" class="inline-action">
-                            <input type="hidden" name="action" value="reset">
-                            <input type="hidden" name="user_id" value="{{ row.id }}">
-                            <button class="btn-small btn-danger" type="submit">Reset</button>
-                        </form>
-                        {% else %}
-                        <form method="POST" class="inline-action">
-                            <input type="hidden" name="action" value="mark">
-                            <input type="hidden" name="user_id" value="{{ row.id }}">
-                            <button class="btn-small btn-mark" type="submit">Mark</button>
-                        </form>
-                        {% endif %}
+                <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nome</th>
+                            <th>Burger</th>
+                            <th>Estado</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in rows %}
+                        <tr id="row-{{ row.id }}">
+                            <td>{{ loop.index }}</td>
 
-                        <!-- QR Code -->
-                        <button type="button" class="btn-small btn-qr"
-                            onclick="showQR('{{ row.id }}', '{{ row.name }}', '{{ row.burger }}')">QR</button>
+                            <!-- Inline edit form -->
+                            <td>
+                                <form method="POST" class="edit-form" id="edit-{{ row.id }}">
+                                    <input type="hidden" name="action" value="edit">
+                                    <input type="hidden" name="user_id" value="{{ row.id }}">
+                                    <input type="text" name="edit_name" value="{{ row.name }}" class="inline-input">
+                            </td>
+                            <td>
+                                    <input type="text" name="edit_burger" value="{{ row.burger }}" class="inline-input">
+                                </form>
+                            </td>
 
-                        <!-- Save edit — tertiary/ghost -->
-                        <button type="submit" form="edit-{{ row.id }}" class="btn-small btn-save-ghost">Save</button>
+                            <td>
+                                {% if row.received %}
+                                    <span class="status-yes">Levantado</span>
+                                {% else %}
+                                    <span class="status-no">Espera</span>
+                                {% endif %}
+                            </td>
+                            <td class="action-cell">
+                                {% if row.received %}
+                                <form method="POST" class="inline-action">
+                                    <input type="hidden" name="action" value="reset">
+                                    <input type="hidden" name="user_id" value="{{ row.id }}">
+                                    <button class="btn-small btn-danger" type="submit">Reset</button>
+                                </form>
+                                {% else %}
+                                <form method="POST" class="inline-action">
+                                    <input type="hidden" name="action" value="mark">
+                                    <input type="hidden" name="user_id" value="{{ row.id }}">
+                                    <button class="btn-small btn-mark" type="submit">Marcar</button>
+                                </form>
+                                {% endif %}
 
-                        <!-- Delete — icon button -->
-                        <form method="POST" class="inline-action">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="user_id" value="{{ row.id }}">
-                            <button class="btn-small btn-delete-icon" type="submit"
-                                onclick="return confirm('Delete this user?')" title="Delete">&times;</button>
-                        </form>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        </div>
+                                <button type="button" class="btn-small btn-qr"
+                                    onclick="showQR('{{ row.id }}', '{{ row.name }}', '{{ row.burger }}')">QR</button>
 
-        <div class="actions-bar">
-            <a class="btn btn-small" href="/">Back to check-in</a>
-            <form method="POST" class="inline-action">
-                <input type="hidden" name="action" value="reset_all">
-                <button class="btn-small btn-danger" type="submit"
-                    onclick="return confirm('Reset ALL entries to Waiting?')">Reset all</button>
-            </form>
-        </div>
+                                <button type="submit" form="edit-{{ row.id }}" class="btn-small btn-save-ghost">Guardar</button>
+
+                                <form method="POST" class="inline-action">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="user_id" value="{{ row.id }}">
+                                    <button class="btn-small btn-delete-icon" type="submit"
+                                        onclick="return confirm('Apagar este convidado?')" title="Apagar">&times;</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+
+            <!-- Add Section -->
+            <div id="section-add" class="section">
+                <h1>Adicionar</h1>
+                <p class="section-subtitle">Adicionar convidados manualmente ou por ficheiro Excel</p>
+
+                {% if message %}
+                <div class="message {{ msg_class }}">{{ message }}</div>
+                {% endif %}
+
+                <!-- Manual add -->
+                <div class="add-form">
+                    <h2>Adicionar Convidado</h2>
+                    <form method="POST" class="inline-form">
+                        <input type="hidden" name="action" value="add">
+                        <input type="text" name="new_name" placeholder="Nome" required>
+                        <input type="text" name="new_burger" placeholder="Burger" required>
+                        <button class="btn-small" type="submit">Adicionar</button>
+                    </form>
+                </div>
+
+                <!-- Excel import -->
+                <div class="import-section">
+                    <h2>Importar de Excel</h2>
+                    <form method="POST" enctype="multipart/form-data" class="import-form">
+                        <input type="hidden" name="action" value="import_excel">
+                        <input type="file" name="excel_file" accept=".xlsx,.xls">
+                        <p class="upload-help">O ficheiro deve ter coluna A = Nome, coluna B = Burger</p>
+                        <button class="btn-small" type="submit">Importar</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="main-footer">
+                Junior Data Consulting &mdash; &copy;2026 all rights reserved
+            </footer>
+        </main>
     </div>
 
     <!-- QR Code Modal -->
@@ -134,7 +199,7 @@
             <div id="qr-code-container"></div>
             <div class="qr-modal-actions">
                 <button class="btn btn-small btn-download" onclick="downloadQR()">Download PNG</button>
-                <button class="btn btn-small" onclick="closeQR()">Close</button>
+                <button class="btn btn-small" onclick="closeQR()">Fechar</button>
             </div>
         </div>
     </div>
@@ -142,10 +207,29 @@
     <script>
         let currentUserName = '';
 
+        /* ---------- Section switching ---------- */
+        document.querySelectorAll('.nav-link').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                var target = this.getAttribute('data-section');
+
+                // Update all nav links (both sidebar and mobile)
+                document.querySelectorAll('.nav-link').forEach(function(l) {
+                    l.classList.toggle('active', l.getAttribute('data-section') === target);
+                });
+
+                // Toggle sections
+                document.querySelectorAll('.section').forEach(function(s) {
+                    s.classList.toggle('active', s.id === target);
+                });
+            });
+        });
+
+        /* ---------- QR Code ---------- */
         function showQR(userId, userName, userBurger) {
             currentUserName = userName;
-            const modal = document.getElementById('qr-modal');
-            const container = document.getElementById('qr-code-container');
+            var modal = document.getElementById('qr-modal');
+            var container = document.getElementById('qr-code-container');
             document.getElementById('qr-modal-title').textContent = userName;
             document.getElementById('qr-modal-burger').textContent = userBurger;
 
@@ -167,23 +251,58 @@
         }
 
         function downloadQR() {
-            const src = document.querySelector('#qr-code-container canvas');
+            var src = document.querySelector('#qr-code-container canvas');
             if (!src) return;
-            const border = 32;
-            const out = document.createElement('canvas');
+            var border = 32;
+            var out = document.createElement('canvas');
             out.width = src.width + border * 2;
             out.height = src.height + border * 2;
-            const ctx = out.getContext('2d');
+            var ctx = out.getContext('2d');
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, out.width, out.height);
             ctx.drawImage(src, border, border);
-            const a = document.createElement('a');
+            var a = document.createElement('a');
             a.href = out.toDataURL('image/png');
             a.download = 'qr-' + currentUserName.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
         }
+
+        /* ---------- Guest search ---------- */
+        (function() {
+            var searchInput = document.getElementById('guest-search');
+            if (!searchInput) return;
+
+            searchInput.addEventListener('input', function() {
+                var query = this.value.toLowerCase().trim();
+                var rows = document.querySelectorAll('#section-guests tbody tr');
+                var firstMatch = null;
+
+                rows.forEach(function(row) {
+                    // Name is in the second cell (index 1)
+                    var nameInput = row.querySelector('input[name="edit_name"]');
+                    var name = nameInput ? nameInput.value.toLowerCase() : '';
+
+                    if (query === '' || name.indexOf(query) !== -1) {
+                        row.style.display = '';
+                        if (query !== '' && !firstMatch) {
+                            firstMatch = row;
+                        }
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                if (firstMatch) {
+                    firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstMatch.classList.add('search-highlight');
+                    setTimeout(function() {
+                        firstMatch.classList.remove('search-highlight');
+                    }, 1000);
+                }
+            });
+        })();
     </script>
 </body>
 </html>

@@ -1,10 +1,11 @@
 import sqlite3
 import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
+import openpyxl
 
 app = Flask(__name__)
 DB_FILE = 'burgers.db'
-ADMIN_PASSWORD = 'admin'
+ADMIN_PASSWORD = 'Zhuo'
 
 
 def get_db():
@@ -129,6 +130,31 @@ def admin():
             conn.commit()
             message = 'All entries have been reset.'
             msg_class = 'error'
+
+        elif action == 'import_excel':
+            file = request.files.get('excel_file')
+            if file and file.filename:
+                try:
+                    wb = openpyxl.load_workbook(file, data_only=True)
+                    ws = wb.active
+                    count = 0
+                    for i, row in enumerate(ws.iter_rows(min_row=1, values_only=True), start=1):
+                        name = str(row[0]).strip() if row[0] else ''
+                        burger = str(row[1]).strip() if len(row) > 1 and row[1] else ''
+                        # Skip header row
+                        if i == 1 and name.lower() in ('name', 'nome', 'names', 'nomes'):
+                            continue
+                        if name and burger:
+                            conn.execute('INSERT INTO users (name, burger) VALUES (?, ?)', (name, burger))
+                            count += 1
+                    conn.commit()
+                    message = f'{count} convidado(s) importado(s) com sucesso.'
+                except Exception as e:
+                    message = f'Erro ao importar ficheiro: {e}'
+                    msg_class = 'error'
+            else:
+                message = 'Nenhum ficheiro selecionado.'
+                msg_class = 'error'
 
     rows = conn.execute('SELECT * FROM users ORDER BY id').fetchall()
     total = len(rows)

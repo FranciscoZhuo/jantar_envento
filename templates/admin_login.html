@@ -8,17 +8,17 @@
 </head>
 <body>
     <div class="card">
-        <div class="icon">&#128274;</div>
-        <h1>Admin Login</h1>
-        <p class="subtitle">Enter the admin password</p>
+        <div class="icon"><img src="{{ url_for('static', filename='img/Logo_Branco.png') }}" alt="JENC Logo" style="max-width: 120px; height: auto;"></div>
+        <h1>Área JDC</h1>
+        <p class="subtitle">Insira a palavra-passe </p>
         <form method="POST">
-            <input type="password" name="password" placeholder="Password" required autocomplete="off">
+            <input type="password" name="password" placeholder="Password (dica: a melhor pessoa que conhecem)" required autocomplete="off">
             <button type="submit">Login</button>
         </form>
         {% if error %}
-        <div class="message error">Wrong password.</div>
+        <div class="message error">Essa não é a melhor pessoa que conhecem.</div>
         {% endif %}
-        <a class="admin-link" href="/">Back to check-in</a>
+        <a class="admin-link" href="/">Voltar atrás</a>
     </div>
 </body>
 </html>
